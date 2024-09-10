@@ -7,7 +7,7 @@ const TrackingPage: FC = () => {
 		<div className='h-full w-full flex flex-col'>
 			<Header />
 			<div className='flex-1 h-full w-full flex py-3'>
-				<div className='flex-1 w-full'>Data</div>
+				<div className='flex-1 w-full'>Data deploy</div>
 				<div className='flex-2 w-full'>
 					<Map />
 				</div>
