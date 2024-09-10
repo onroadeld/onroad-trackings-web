@@ -45,15 +45,15 @@ jobs:
           dockerfile: Dockerfile
           skip-when-tags-exist: false
 
-  # Job to update the ECS service with the new image
+  # Job to update the ECS service with the new image using aws-ecs orb
   deploy-to-ecs:
     executor: default-ubuntu
     steps:
       - aws-ecs/deploy-service-update:
           cluster: Tracking-frontend-cluster-prod
-          container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
           family: tracking-frontend-td-prod
           service-name: tracking-frontend-service-prod
+          container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
           force-new-deployment: true
 
 workflows:
