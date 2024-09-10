@@ -50,9 +50,9 @@ jobs:
     executor: default-ubuntu
     steps:
       - aws-ecs/deploy-service-update:
-          cluster: Tracking-frontend-cluster-prod
-          family: tracking-frontend-td-prod
+          cluster-name: Tracking-frontend-cluster-prod
           service-name: tracking-frontend-service-prod
+          family: tracking-frontend-td-prod
           container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
           force-new-deployment: true
 
