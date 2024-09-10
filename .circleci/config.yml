@@ -1,49 +1,41 @@
 orbs:
-    aws-ecr: circleci/aws-ecr@7.0.0
-    aws-ecs: circleci/aws-ecs@3.2
+  aws-ecr: circleci/aws-ecr@7.0.0
+  aws-ecs: circleci/aws-ecs@3.2
 version: 2.1
 
 executors:
-    default-ubuntu:
-        machine:
-            image: ubuntu-2004:current
-install-aws-cli:
-    executor: default-ubuntu
-    steps:
-        - checkout
-        - run:
-              name: Install AWS CLI
-              command: |
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                  unzip awscliv2.zip
-                  sudo ./aws/install
+  default-ubuntu:
+    machine:
+      image: ubuntu-2004:current
+
 workflows:
-    deploy_frontend:
-        jobs:
-            - aws-ecr/build-and-push-image:
-                  executor: default-ubuntu
-                  aws-access-key-id: AWS_ACCESS_KEY_ID
-                  aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-                  region: AWS_REGION
-                  account-url: AWS_ECR_ACCOUNT_URL
-                  repo: tracking-frontend-prod
-                  create-repo: true
-                  tag: 'PROD_$CIRCLE_SHA1'
-                  dockerfile: Dockerfile
-                  skip-when-tags-exist: false
-                  filters:
-                      branches:
-                          only:
-                              - main
-            - aws-ecs/deploy-service-update:
-                  cluster: Tracking-frontend-cluster-prod
-                  container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
-                  family: tracking-frontend-td-prod
-                  service-name: tracking-frontend-service-prod
-                  force-new-deployment: true
-                  filters:
-                      branches:
-                          only:
-                              - main
-                  requires:
-                      - aws-ecr/build-and-push-image
+  deploy_frontend:
+    jobs:
+      - aws-ecr/build-and-push-image:
+          executor: default-ubuntu
+          name: 'build-image-and-push-to-ecr'
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          region: AWS_REGION
+          account-url: AWS_ECR_ACCOUNT_URL
+          repo: tracking-frontend-prod
+          create-repo: true
+          tag: 'PROD_$CIRCLE_SHA1'
+          dockerfile: Dockerfile
+          skip-when-tags-exist: false
+          filters:
+            branches:
+              only:
+                - main
+      - aws-ecs/deploy-service-update:
+          cluster: Tracking-frontend-cluster-prod
+          container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
+          family: tracking-frontend-td-prod
+          service-name: tracking-frontend-service-prod
+          force-new-deployment: true
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - build-image-and-push-to-ecr
