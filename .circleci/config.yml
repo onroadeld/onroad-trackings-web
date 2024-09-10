@@ -7,21 +7,13 @@ executors:
     default-ubuntu:
         machine:
             image: ubuntu-2004:current
-install-aws-cli:
-    executor: default-ubuntu
-    steps:
-        - checkout
-        - run:
-              name: Install AWS CLI
-              command: |
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                  unzip awscliv2.zip
-                  sudo ./aws/install
+
 workflows:
     deploy_frontend:
         jobs:
             - aws-ecr/build-and-push-image:
                   executor: default-ubuntu
+                  name: 'build-image-and-push-to-ecr'
                   aws-access-key-id: AWS_ACCESS_KEY_ID
                   aws-secret-access-key: AWS_SECRET_ACCESS_KEY
                   region: AWS_REGION
@@ -46,4 +38,4 @@ workflows:
                           only:
                               - main
                   requires:
-                      - aws-ecr/build-and-push-image
+                      - build-image-and-push-to-ecr
