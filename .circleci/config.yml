@@ -1,41 +1,70 @@
+version: 2.1
+
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
   aws-ecs: circleci/aws-ecs@3.2
-version: 2.1
 
 executors:
   default-ubuntu:
     machine:
       image: ubuntu-2004:current
 
-workflows:
-  deploy_frontend:
-    jobs:
-      - aws-ecr/build-and-push-image:
-          executor: default-ubuntu
-          name: 'build-image-and-push-to-ecr'
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          region: AWS_REGION
-          account-url: AWS_ECR_ACCOUNT_URL
-          repo: tracking-frontend-prod
-          create-repo: true
-          tag: 'PROD_$CIRCLE_SHA1'
-          dockerfile: Dockerfile
-          skip-when-tags-exist: false
-          filters:
-            branches:
-              only:
-                - main
+jobs:
+  build_and_push_image:
+    executor: default-ubuntu
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Login to AWS ECR
+          command: |
+            echo "Logging into AWS ECR"
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL
+      - setup_remote_docker:
+          version: 20.10.7
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t $AWS_ECR_ACCOUNT_URL/tracking-frontend-prod:PROD_$CIRCLE_SHA1 .
+      - run:
+          name: Push Docker Image to ECR
+          command: |
+            docker push $AWS_ECR_ACCOUNT_URL/tracking-frontend-prod:PROD_$CIRCLE_SHA1
+
+  deploy_to_ecs:
+    executor: default-ubuntu
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - aws-ecs/deploy-service-update:
           cluster: Tracking-frontend-cluster-prod
           container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
           family: tracking-frontend-td-prod
           service-name: tracking-frontend-service-prod
           force-new-deployment: true
+
+workflows:
+  deploy_frontend:
+    jobs:
+      - build_and_push_image:
+          filters:
+            branches:
+              only:
+                - main
+      - deploy_to_ecs:
           filters:
             branches:
               only:
                 - main
           requires:
-            - build-image-and-push-to-ecr
+            - build_and_push_image
