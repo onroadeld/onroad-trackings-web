@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import TrackingPage from '../pages/Tracking.Page'
-import NotFoundPage from '../pages/NotFound.Page'
+import TrackingPage from '../pages/TrackingPage'
+import NotFoundPage from '../pages/NotFoundPage'
 
 export const AppRoutes: FC = () => {
 	return (
