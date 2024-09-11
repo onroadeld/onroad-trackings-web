@@ -7,7 +7,7 @@ const client = axios.create({
 
 export const request = async (options: AxiosRequestConfig) => {
 	const onSuccess = (response: AxiosResponse) => {
-		return response?.data?.data
+		return response?.data
 	}
 	const onError = (error: AxiosError) => {
 		return Promise.reject(error.response?.data)

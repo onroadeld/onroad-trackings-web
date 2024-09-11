@@ -1,25 +1,50 @@
-import { FC } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { forwardRef } from 'react'
+import { LatLngExpression, Map } from 'leaflet'
+import {
+	AttributionControl,
+	MapContainer,
+	Marker,
+	TileLayer,
+} from 'react-leaflet'
+import { TrackingType } from '@/utils/types'
 import 'leaflet/dist/leaflet.css'
+import { getCurrentLocationIcon } from './utils'
 
-const mapConfig = {
-	base: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+type MapConfig = {
+	base: string
+	defaultPosition: LatLngExpression
+	defaultZoom: number
 }
 
-export const Map: FC = () => {
-	return (
-		<MapContainer
-			center={[51.505, -0.09]}
-			zoom={13}
-			className='h-full w-full'
-			scrollWheelZoom={'center'}
-		>
-			<TileLayer url={mapConfig.base} />
-			<Marker position={[51.505, -0.09]}>
-				<Popup>
-					A pretty CSS3 popup. <br /> Easily customizable.
-				</Popup>
-			</Marker>
-		</MapContainer>
-	)
+const mapConfig: MapConfig = {
+	base: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+	defaultPosition: [39.8283, -98.5795],
+	defaultZoom: 4,
 }
+
+type Props = TrackingType
+
+export const TrackingMap = forwardRef<Map, Props>(
+	({ currentLocation }, ref) => {
+		const { latitude = 0, longitude = 0 } = currentLocation || {}
+
+		return (
+			<div className='flex-[2] w-full shadow-md'>
+				<MapContainer
+					className='h-full w-full'
+					attributionControl={false}
+					center={mapConfig.defaultPosition}
+					zoom={mapConfig.defaultZoom}
+					ref={ref}
+				>
+					<TileLayer url={mapConfig.base} />
+					<AttributionControl prefix='OnRoad ELD Tracking' />
+					<Marker
+						position={[latitude, longitude]}
+						icon={getCurrentLocationIcon(45)}
+					/>
+				</MapContainer>
+			</div>
+		)
+	},
+)
