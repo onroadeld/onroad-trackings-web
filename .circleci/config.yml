@@ -22,7 +22,12 @@ jobs:
                       ssh -o "StrictHostKeyChecking=no" -i ./privateKey.pem ec2-user@$HOST '
                       if [[ ! $(sudo docker -v) ]]; then
                          sudo yum install -y docker
-                      fi'
+                      fi
+                      if [[ ! $(sudo systemctl is-active docker) == "active" ]]; then
+                         sudo systemctl start docker
+                         sudo systemctl enable docker
+                      fi
+                      '
     build-image:
         docker:
             - image: docker:20.10.9
