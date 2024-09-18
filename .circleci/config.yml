@@ -9,7 +9,7 @@ parameters:
 jobs:
     install-docker:
         docker:
-            - image: circleci/node:18
+            - image: circleci/node:14
         steps:
             - run:
                   name: Install SSH And Configure
@@ -43,7 +43,7 @@ jobs:
                       - << pipeline.parameters.docker-container-prod >>.tar.gz
     transfer-and-run:
         docker:
-            - image: circleci/node:18
+            - image: circleci/node:14
         steps:
             - attach_workspace:
                   at: .
