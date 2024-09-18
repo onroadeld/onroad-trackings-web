@@ -57,7 +57,11 @@ const TrackingPage: FC = () => {
 	return (
 		<div className='h-full w-full flex py-4 gap-6 max-md:flex-col-reverse max-sm:gap-0 max-sm:py-0 '>
 			<TrackingDetails {...data} />
-			<TrackingMap {...data} ref={(node) => setMapInstance(node)} />
+			<TrackingMap
+				{...data}
+				ref={(node) => setMapInstance(node)}
+				map={mapInstance}
+			/>
 		</div>
 	)
 }

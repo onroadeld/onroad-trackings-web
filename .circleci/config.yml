@@ -1,41 +1,98 @@
-orbs:
-  aws-ecr: circleci/aws-ecr@7.0.0
-  aws-ecs: circleci/aws-ecs@3.2
 version: 2.1
 
-executors:
-  default-ubuntu:
-    machine:
-      image: ubuntu-2004:current
+parameters:
+    docker-container-prod:
+        type: string
+        default: 'event-consumer-trackings'
+        description: 'Docker container name for OnRoad Trackings'
+
+jobs:
+    install-docker:
+        docker:
+            - image: circleci/node:18
+        steps:
+            - run:
+                  name: Install SSH And Configure
+                  command: |
+                      echo $SSH_PRIVATE_KEY | base64 --decode > ./privateKey.pem
+                      chmod 400 privateKey.pem
+            - run:
+                  name: Install Docker If Not Exists
+                  command: |
+                      ssh -o "StrictHostKeyChecking=no" -i ./privateKey.pem ec2-user@$HOST '
+                      if [[ ! $(sudo docker -v) ]]; then
+                         sudo yum install docker
+                      fi'
+    build-image:
+        docker:
+            - image: docker:20.10.9
+        steps:
+            - checkout
+            - setup_remote_docker
+            - run:
+                  name: Build Docker Image
+                  command: |
+                      docker build -t << pipeline.parameters.docker-container-prod >>:latest .
+            - run:
+                  name: Compress Docker Image
+                  command: |
+                      docker save << pipeline.parameters.docker-container-prod >>:latest | gzip > << pipeline.parameters.docker-container-prod >>.tar.gz
+            - persist_to_workspace:
+                  root: .
+                  paths:
+                      - << pipeline.parameters.docker-container-prod >>.tar.gz
+    transfer-and-run:
+        docker:
+            - image: circleci/node:18
+        steps:
+            - attach_workspace:
+                  at: .
+            - run:
+                  name: Install SSH And Configure
+                  command: |
+                      echo $SSH_PRIVATE_KEY | base64 --decode > ./privateKey.pem
+                      chmod 400 privateKey.pem
+            - run:
+                  name: Stop Remote Docker Container If Exists with name << pipeline.parameters.docker-container-prod >> even not working
+                  command: |
+                      ssh -o "StrictHostKeyChecking=no" -i ./privateKey.pem ec2-user@$HOST '
+                          if [[ $(sudo docker ps -a -q -f name=<< pipeline.parameters.docker-container-prod >>) ]]; then
+                              sudo docker rm -f << pipeline.parameters.docker-container-prod >>
+                              sudo docker rmi << pipeline.parameters.docker-container-prod >>:latest
+                          fi
+                      '
+            - run:
+                  name: Transfer File
+                  command: |
+                      scp -o "StrictHostKeyChecking=no" -i ./privateKey.pem ./<< pipeline.parameters.docker-container-prod >>.tar.gz ec2-user@$HOST:~/
+            - run:
+                  name: Decompress Docker Image | Run Compose
+                  command: |
+                      ssh -o "StrictHostKeyChecking=no" -i ./privateKey.pem ec2-user@$HOST '
+                      sudo gunzip -c ./<< pipeline.parameters.docker-container-prod >>.tar.gz | sudo docker load
+                      sudo rm ./<< pipeline.parameters.docker-container-prod >>.tar.gz
+                      sudo docker run -d --name << pipeline.parameters.docker-container-prod >> -p 80:80 --restart unless-stopped << pipeline.parameters.docker-container-prod >>:latest
+                      '
 
 workflows:
-  deploy_frontend:
-    jobs:
-      - aws-ecr/build-and-push-image:
-          executor: default-ubuntu
-          name: 'build-image-and-push-to-ecr'
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          region: AWS_REGION
-          account-url: AWS_ECR_ACCOUNT_URL
-          repo: tracking-frontend-prod
-          create-repo: true
-          tag: 'PROD_$CIRCLE_SHA1'
-          dockerfile: Dockerfile
-          skip-when-tags-exist: false
-          filters:
-            branches:
-              only:
-                - main
-      - aws-ecs/deploy-service-update:
-          cluster: Tracking-frontend-cluster-prod
-          container-image-name-updates: 'container=trackingcontainerprod,tag=PROD_$CIRCLE_SHA1'
-          family: tracking-frontend-td-prod
-          service-name: tracking-frontend-service-prod
-          force-new-deployment: true
-          filters:
-            branches:
-              only:
-                - main
-          requires:
-            - build-image-and-push-to-ecr
+    deploy-production:
+        jobs:
+            - install-docker:
+                  filters:
+                      branches:
+                          only:
+                              - main
+            - build-image:
+                  requires:
+                      - install-docker
+                  filters:
+                      branches:
+                          only:
+                              - main
+            - transfer-and-run:
+                  requires:
+                      - build-image
+                  filters:
+                      branches:
+                          only:
+                              - main
