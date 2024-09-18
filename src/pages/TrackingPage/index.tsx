@@ -23,7 +23,6 @@ const TrackingPage: FC = () => {
 			refetchInterval: 15000,
 		},
 	)
-
 	useEffect(() => {
 		if (mapInstance && firstRenderRef.current && data) {
 			const { latitude, longitude } = data.currentLocation
