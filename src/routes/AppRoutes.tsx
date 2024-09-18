@@ -1,13 +1,18 @@
 import { FC } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import TrackingPage from '../pages/Tracking.Page'
-import NotFoundPage from '../pages/NotFound.Page'
+
+import { Layout } from '@/layout'
+
+import TrackingPage from '../pages/TrackingPage'
+import NotFoundPage from '../pages/NotFoundPage'
 
 export const AppRoutes: FC = () => {
 	return (
 		<Routes>
-			<Route path='/' element={<TrackingPage />} />
-			<Route path='*' element={<NotFoundPage />} />
+			<Route path='/' element={<Layout />}>
+				<Route path='/' element={<TrackingPage />} />
+				<Route path='*' element={<NotFoundPage />} />
+			</Route>
 		</Routes>
 	)
 }

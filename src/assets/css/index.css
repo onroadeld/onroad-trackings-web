@@ -2,10 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+	* {
+		font-family: 'Archivo', sans-serif;
+	}
+}
+
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 
-	color-scheme: light dark;
+	/* color-scheme: light dark; */
 
 	color: #ffffff;
 	background-color: #0a384a;
@@ -16,12 +22,12 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
 	:root {
 		color: #3b424a;
 		background-color: #ffffff;
 	}
-}
+} */
 
 * {
 	box-sizing: border-box;
