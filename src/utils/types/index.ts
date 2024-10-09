@@ -16,13 +16,14 @@ export type TripHistoryType = {
 export type TrackingType = {
 	driverId: number
 	companyName: string
-	driverName: string
-	coDriverName: string
 	truckNumber: string
-	trailer: string
-	shippingDocumentNumber: string
 	currentLocation: LocationType
+	destination: LocationType | null
+	destinationETA: number
+	showDestination: boolean
 	timeZone: string
 	currentTime: string
 	tripHistory: TripHistoryType[]
+	degree: number
+	speed: number
 }

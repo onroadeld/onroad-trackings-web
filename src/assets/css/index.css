@@ -15,7 +15,8 @@
 
 	color: #ffffff;
 	background-color: #0a384a;
-
+	background-image: url(/background.webp);
+	background-size: cover;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
