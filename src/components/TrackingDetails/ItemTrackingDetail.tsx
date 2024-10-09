@@ -7,9 +7,13 @@ type Props = {
 
 export const ItemTrackingDetail: FC<Props> = ({ title, value }) => {
 	return (
-		<div className='flex flex-col gap-1'>
-			<span className='font-medium text-[15px]'>{title}:</span>
-			<span className='font-semibold text-base'>{value}</span>
+		<div className='flex gap-1'>
+			<span className='font-medium text-[15px] min-w-[140px]'>
+				{title}:
+			</span>
+			<span className='font-semibold text-base max-sm:text-sm'>
+				{value}
+			</span>
 		</div>
 	)
 }

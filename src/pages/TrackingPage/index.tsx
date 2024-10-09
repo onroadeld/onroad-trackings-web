@@ -10,7 +10,7 @@ import { Map } from 'leaflet'
 const TrackingPage: FC = () => {
 	const [searchParams] = useSearchParams()
 	const token = searchParams.get('token') || ''
-	const [mapInstance, setMapInstance] = useState<Map | null>(null)
+	const [mapInstance, setMapInstance] = useState<Map>()
 
 	const firstRenderRef = useRef(true)
 
@@ -38,7 +38,9 @@ const TrackingPage: FC = () => {
 	if (!token || !data) {
 		return (
 			<div className='h-full w-full grid place-items-center'>
-				<span className='text-6xl font-semibold'>No trackings</span>
+				<span className='text-6xl font-semibold max-sm:text-4xl'>
+					No trackings
+				</span>
 			</div>
 		)
 	}
@@ -46,7 +48,7 @@ const TrackingPage: FC = () => {
 	if (isLoadingError || isError) {
 		return (
 			<div className='h-full w-full grid place-items-center'>
-				<span className='text-6xl font-semibold'>
+				<span className='text-6xl font-semibold max-sm:text-4xl'>
 					Failed to get trackings
 				</span>
 			</div>
@@ -54,11 +56,12 @@ const TrackingPage: FC = () => {
 	}
 
 	return (
-		<div className='h-full w-full flex py-4 gap-6 max-md:flex-col-reverse max-sm:gap-0 max-sm:py-0 '>
+		<div className='h-full w-full flex flex-col gap-6 max-sm:gap-4'>
 			<TrackingDetails {...data} />
 			<TrackingMap
 				{...data}
-				ref={(node) => setMapInstance(node)}
+				// ref={(node) => setMapInstance(node)}
+				setMap={setMapInstance}
 				map={mapInstance}
 			/>
 		</div>
